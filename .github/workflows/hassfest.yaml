@@ -1,4 +1,4 @@
-name: Hassfest
+name: Validate with hassfest
 
 on:
   push:
@@ -7,5 +7,8 @@ on:
     - cron: "0 0 * * *"
 
 jobs:
-  hassfest:
-    uses: "home-assistant/actions/.github/workflows/hassfest.yaml@main"
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: home-assistant/actions/hassfest@master
