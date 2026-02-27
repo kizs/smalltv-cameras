@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "SmallTV Ultra beállítása",
+        "description": "Add meg az eszköz IP-címét (pl. 192.168.0.18).",
+        "data": {
+          "host": "IP-cím"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nem sikerült csatlakozni az eszközhöz. Ellenőrizd az IP-címet és a hálózatot.",
+      "not_smalltv_ultra": "A megadott cím nem SmallTV Ultra eszközre mutat. Ellenőrizd az IP-t."
+    },
+    "abort": {
+      "already_configured": "Az eszköz már hozzá van adva."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "SmallTV Ultra beállítások",
+        "data": {
+          "cameras": "Kamera entitások",
+          "refresh_interval": "Frissítési intervallum (mp)",
+          "cycle_interval": "Képváltási intervallum (mp)",
+          "mode": "Megjelenítési mód"
+        },
+        "data_description": {
+          "refresh_interval": "Milyen sűrűn küldjön HA új képet az eszközre (minimum 60 mp, flash kímélés miatt).",
+          "cycle_interval": "Milyen gyorsan váltson az eszköz a képek között."
+        }
+      }
+    }
+  }
+}
