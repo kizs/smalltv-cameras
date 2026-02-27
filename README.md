@@ -129,4 +129,4 @@ SmallTV Ultra HTTP API
 
 ## License
 
-MIT
+Apache 2.0
