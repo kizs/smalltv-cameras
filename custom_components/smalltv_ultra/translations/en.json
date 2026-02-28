@@ -2,8 +2,36 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up SmallTV Ultra",
+        "title": "Add SmallTV Ultra",
+        "description": "How do you want to find the device?",
+        "data": {
+          "method": "Method"
+        }
+      },
+      "scan": {
+        "title": "Scan network",
+        "description": "Enter the first three octets of your subnet (e.g. 192.168.0). The integration will probe all 254 hosts and list any SmallTV Ultra devices it finds.",
+        "data": {
+          "subnet": "Subnet"
+        }
+      },
+      "pick": {
+        "title": "Choose a device",
+        "description": "The following SmallTV Ultra devices were found on the network:",
+        "data": {
+          "host": "Device"
+        }
+      },
+      "manual": {
+        "title": "Enter IP address",
         "description": "Enter the IP address of your SmallTV Ultra device (e.g. 192.168.0.18).",
+        "data": {
+          "host": "IP Address"
+        }
+      },
+      "reconfigure": {
+        "title": "Change SmallTV Ultra IP address",
+        "description": "Enter the new IP address of your device.",
         "data": {
           "host": "IP Address"
         }
@@ -11,7 +39,8 @@
     },
     "error": {
       "cannot_connect": "Failed to connect to the device. Check the IP address and network.",
-      "not_smalltv_ultra": "The device at that address is not a SmallTV Ultra. Check the IP."
+      "not_smalltv_ultra": "The device at that address is not a SmallTV Ultra.",
+      "no_devices_found": "No SmallTV Ultra devices found on that subnet. Check the subnet or enter the IP manually."
     },
     "abort": {
       "already_configured": "Device is already configured."
@@ -28,8 +57,8 @@
           "mode": "Display mode"
         },
         "data_description": {
-          "refresh_interval": "How often HA uploads new images to the device (minimum 60s to protect flash).",
-          "cycle_interval": "How fast the device cycles through images."
+          "refresh_interval": "How often HA uploads new images to the device (minimum 60s).",
+          "cycle_interval": "How fast the device cycles through camera frames in the GIF."
         }
       }
     }

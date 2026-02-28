@@ -2,8 +2,36 @@
   "config": {
     "step": {
       "user": {
-        "title": "SmallTV Ultra beállítása",
+        "title": "SmallTV Ultra hozzáadása",
+        "description": "Hogyan szeretnéd megtalálni az eszközt?",
+        "data": {
+          "method": "Módszer"
+        }
+      },
+      "scan": {
+        "title": "Hálózat keresése",
+        "description": "Add meg az alhálózat első három oktetjét (pl. 192.168.0). Az integráció megkeresi az összes SmallTV Ultra eszközt ezen az alhálózaton.",
+        "data": {
+          "subnet": "Alhálózat"
+        }
+      },
+      "pick": {
+        "title": "Válassz eszközt",
+        "description": "A következő SmallTV Ultra eszközöket találtam a hálózaton:",
+        "data": {
+          "host": "Eszköz"
+        }
+      },
+      "manual": {
+        "title": "IP-cím megadása",
         "description": "Add meg az eszköz IP-címét (pl. 192.168.0.18).",
+        "data": {
+          "host": "IP-cím"
+        }
+      },
+      "reconfigure": {
+        "title": "SmallTV Ultra IP-cím módosítása",
+        "description": "Add meg az eszköz új IP-címét.",
         "data": {
           "host": "IP-cím"
         }
@@ -11,7 +39,8 @@
     },
     "error": {
       "cannot_connect": "Nem sikerült csatlakozni az eszközhöz. Ellenőrizd az IP-címet és a hálózatot.",
-      "not_smalltv_ultra": "A megadott cím nem SmallTV Ultra eszközre mutat. Ellenőrizd az IP-t."
+      "not_smalltv_ultra": "A megadott cím nem SmallTV Ultra eszközre mutat.",
+      "no_devices_found": "Nem található SmallTV Ultra eszköz ezen az alhálózaton. Ellenőrizd az alhálózatot, vagy add meg az IP-t kézzel."
     },
     "abort": {
       "already_configured": "Az eszköz már hozzá van adva."
@@ -28,7 +57,7 @@
           "mode": "Megjelenítési mód"
         },
         "data_description": {
-          "refresh_interval": "Milyen sűrűn küldjön HA új képet az eszközre (minimum 60 mp, flash kímélés miatt).",
+          "refresh_interval": "Milyen sűrűn küldjön HA új képet az eszközre (minimum 60 mp).",
           "cycle_interval": "Milyen gyorsan váltson az eszköz a képek között."
         }
       }
