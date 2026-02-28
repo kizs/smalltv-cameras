@@ -19,12 +19,24 @@ from .const import (
     CONF_REFRESH_INTERVAL,
     CONF_CYCLE_INTERVAL,
     CONF_MODE,
+    CONF_DEVICE_TYPE,
+    DEVICE_ULTRA,
+    DEVICE_PRO,
     DEFAULT_REFRESH_INTERVAL,
     DEFAULT_CYCLE_INTERVAL,
     DEFAULT_MODE,
     MODE_CAMERAS,
     MODE_BUILTIN,
 )
+
+
+def _device_type(model: str) -> str | None:
+    """Return DEVICE_ULTRA / DEVICE_PRO based on /v.json model string, or None."""
+    if "SmallTV-Ultra" in model:
+        return DEVICE_ULTRA
+    if "SmallTV-PRO" in model or "SmallTV Pro" in model:
+        return DEVICE_PRO
+    return None
 
 _SCAN_TIMEOUT = aiohttp.ClientTimeout(total=2)
 _SCAN_CONCURRENCY = 50
@@ -36,7 +48,7 @@ class SmallTVUltraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     def __init__(self) -> None:
-        self._found: list[tuple[str, str]] = []  # (ip, firmware_version)
+        self._found: list[tuple[str, str, str]] = []  # (ip, firmware_version, device_type)
 
     # ------------------------------------------------------------------ #
     # Step 1 – choose method                                               #
@@ -99,20 +111,25 @@ class SmallTVUltraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_pick(
         self, user_input: dict | None = None
     ) -> FlowResult:
-        """Let the user pick one of the discovered SmallTV Ultra devices."""
+        """Let the user pick one of the discovered SmallTV devices."""
         if user_input is not None:
             host = user_input[CONF_HOST]
-            fw = next((v for ip, v in self._found if ip == host), "")
+            entry = next((t for t in self._found if t[0] == host), None)
+            fw, dtype = (entry[1], entry[2]) if entry else ("", DEVICE_ULTRA)
             await self.async_set_unique_id(host)
             self._abort_if_unique_id_configured()
+            model_name = "SmallTV Pro" if dtype == DEVICE_PRO else "SmallTV Ultra"
             return self.async_create_entry(
-                title=f"SmallTV Ultra ({host})",
-                data={CONF_HOST: host},
+                title=f"{model_name} ({host})",
+                data={CONF_HOST: host, CONF_DEVICE_TYPE: dtype},
             )
 
         options = [
-            selector.SelectOptionDict(value=ip, label=f"{ip}  –  {fw}")
-            for ip, fw in sorted(self._found)
+            selector.SelectOptionDict(
+                value=ip,
+                label=f"{ip}  –  {'Pro' if dtype == DEVICE_PRO else 'Ultra'}  {fw}",
+            )
+            for ip, fw, dtype in sorted(self._found)
         ]
         return self.async_show_form(
             step_id="pick",
@@ -141,14 +158,16 @@ class SmallTVUltraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api = SmallTVApi(host, session)
             try:
                 info = await api.get_info()
-                if "SmallTV-Ultra" not in info.get("m", ""):
+                dtype = _device_type(info.get("m", ""))
+                if dtype is None:
                     errors["base"] = "not_smalltv_ultra"
                 else:
                     await self.async_set_unique_id(host)
                     self._abort_if_unique_id_configured()
+                    model_name = "SmallTV Pro" if dtype == DEVICE_PRO else "SmallTV Ultra"
                     return self.async_create_entry(
-                        title=f"SmallTV Ultra ({host})",
-                        data={CONF_HOST: host},
+                        title=f"{model_name} ({host})",
+                        data={CONF_HOST: host, CONF_DEVICE_TYPE: dtype},
                     )
             except (aiohttp.ClientError, SmallTVApiError, TimeoutError):
                 errors["base"] = "cannot_connect"
@@ -175,15 +194,17 @@ class SmallTVUltraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api = SmallTVApi(host, session)
             try:
                 info = await api.get_info()
-                if "SmallTV-Ultra" not in info.get("m", ""):
+                dtype = _device_type(info.get("m", ""))
+                if dtype is None:
                     errors["base"] = "not_smalltv_ultra"
                 else:
                     await self.async_set_unique_id(host)
                     self._abort_if_unique_id_mismatch()
+                    model_name = "SmallTV Pro" if dtype == DEVICE_PRO else "SmallTV Ultra"
                     return self.async_update_reload_and_abort(
                         self._get_reconfigure_entry(),
-                        title=f"SmallTV Ultra ({host})",
-                        data={CONF_HOST: host},
+                        title=f"{model_name} ({host})",
+                        data={CONF_HOST: host, CONF_DEVICE_TYPE: dtype},
                     )
             except (aiohttp.ClientError, SmallTVApiError, TimeoutError):
                 errors["base"] = "cannot_connect"
@@ -212,12 +233,12 @@ class SmallTVUltraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # Subnet scanner                                                       #
     # ------------------------------------------------------------------ #
 
-    async def _async_scan_subnet(self, subnet: str) -> list[tuple[str, str]]:
-        """Probe subnet.1–254 concurrently; return [(ip, firmware_version)]."""
+    async def _async_scan_subnet(self, subnet: str) -> list[tuple[str, str, str]]:
+        """Probe subnet.1–254 concurrently; return [(ip, firmware_version, device_type)]."""
         session = async_get_clientsession(self.hass)
         sem = asyncio.Semaphore(_SCAN_CONCURRENCY)
 
-        async def probe(ip: str) -> tuple[str, str] | None:
+        async def probe(ip: str) -> tuple[str, str, str] | None:
             async with sem:
                 try:
                     async with session.get(
@@ -226,8 +247,9 @@ class SmallTVUltraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ) as resp:
                         if resp.status == 200:
                             data = await resp.json(content_type=None)
-                            if "SmallTV-Ultra" in data.get("m", ""):
-                                return ip, data.get("v", "unknown")
+                            dtype = _device_type(data.get("m", ""))
+                            if dtype is not None:
+                                return ip, data.get("v", "unknown"), dtype
                 except Exception:
                     pass
             return None

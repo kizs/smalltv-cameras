@@ -16,6 +16,8 @@ from .const import (
     CONF_CAMERAS,
     CONF_CYCLE_INTERVAL,
     CONF_MODE,
+    CONF_DEVICE_TYPE,
+    DEVICE_PRO,
     DEFAULT_CYCLE_INTERVAL,
     DEFAULT_MODE,
     MODE_CAMERAS,
@@ -39,7 +41,8 @@ class SmallTVUltraCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = api
         self.entry = entry
         self._firmware_version: str = "unknown"
-        # Flag: True means we need to (re-)send theme + album settings on next run
+        self._is_pro: bool = entry.data.get(CONF_DEVICE_TYPE) == DEVICE_PRO
+        # Flag: True means we need to (re-)send theme + clear on next run
         self._needs_album_init: bool = True
 
         super().__init__(
@@ -52,6 +55,10 @@ class SmallTVUltraCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @property
     def firmware_version(self) -> str:
         return self._firmware_version
+
+    @property
+    def is_pro(self) -> bool:
+        return self._is_pro
 
     # ------------------------------------------------------------------ #
     # Core update                                                          #
@@ -72,11 +79,14 @@ class SmallTVUltraCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         cameras: list[str] = opts.get(CONF_CAMERAS, [])
 
         if mode == MODE_BUILTIN:
+            self._needs_album_init = True  # Re-init next time we switch to cameras
+            if self._is_pro:
+                # Pro has no /app.json – just report builtin mode without theme info
+                return {"mode": MODE_BUILTIN, "theme": 1}
             try:
                 app_info = await self.api.get_app_info()
             except SmallTVApiError as err:
                 raise UpdateFailed(f"Cannot get app info: {err}") from err
-            self._needs_album_init = True  # Re-init next time we switch to cameras
             return {"mode": MODE_BUILTIN, "theme": app_info.get("theme", 1)}
 
         # ---- MODE_CAMERAS ----
@@ -127,6 +137,12 @@ class SmallTVUltraCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             await self.api.upload_image("cameras.gif", gif_bytes, content_type="image/gif")
             await self.api.set_gif("/image//cameras.gif")
+            # Album cycle interval only supported on Ultra
+            if not self._is_pro and self._needs_album_init:
+                try:
+                    await self.api.set_album_options(cycle_interval, 1)
+                except SmallTVApiError:
+                    pass
             self._needs_album_init = False
             _LOGGER.debug("GIF uploaded and displayed")
         except SmallTVApiError as err:

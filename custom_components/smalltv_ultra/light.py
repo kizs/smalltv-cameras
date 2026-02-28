@@ -46,11 +46,12 @@ class SmallTVUltraLight(CoordinatorEntity[SmallTVUltraCoordinator], LightEntity)
 
     @property
     def device_info(self) -> DeviceInfo:
+        model = "SmallTV Pro" if self.coordinator.is_pro else "SmallTV Ultra"
         return DeviceInfo(
             identifiers={(DOMAIN, self._entry.entry_id)},
-            name="SmallTV Ultra",
+            name=model,
             manufacturer="GeekMagic",
-            model="SmallTV Ultra",
+            model=model,
             sw_version=self.coordinator.firmware_version,
             configuration_url=f"http://{self._entry.data[CONF_HOST]}",
         )

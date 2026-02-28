@@ -15,4 +15,8 @@ DEFAULT_MODE = "cameras"
 MODE_CAMERAS = "cameras"
 MODE_BUILTIN = "builtin"
 
+CONF_DEVICE_TYPE = "device_type"
+DEVICE_ULTRA = "ultra"
+DEVICE_PRO = "pro"
+
 PLATFORMS = ["light", "number", "button", "select"]
