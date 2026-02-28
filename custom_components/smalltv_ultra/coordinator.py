@@ -137,8 +137,8 @@ class SmallTVUltraCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             await self.api.upload_image("cameras.gif", gif_bytes, content_type="image/gif")
             await self.api.set_gif("/image//cameras.gif")
-            # Album cycle interval only supported on Ultra
-            if not self._is_pro and self._needs_album_init:
+            # Send autoplay trigger for both Ultra and Pro; i_i may be ignored on Pro
+            if self._needs_album_init:
                 try:
                     await self.api.set_album_options(cycle_interval, 1)
                 except SmallTVApiError:
