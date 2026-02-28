@@ -199,12 +199,13 @@ class SmallTVUltraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "not_smalltv_ultra"
                 else:
                     await self.async_set_unique_id(host)
-                    self._abort_if_unique_id_mismatch()
+                    self._abort_if_unique_id_configured()
                     model_name = "SmallTV Pro" if dtype == DEVICE_PRO else "SmallTV Ultra"
                     return self.async_update_reload_and_abort(
                         self._get_reconfigure_entry(),
                         title=f"{model_name} ({host})",
                         data={CONF_HOST: host, CONF_DEVICE_TYPE: dtype},
+                        unique_id=host,
                     )
             except (aiohttp.ClientError, SmallTVApiError, TimeoutError):
                 errors["base"] = "cannot_connect"

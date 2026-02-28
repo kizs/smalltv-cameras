@@ -67,7 +67,7 @@ class SmallTVUltraLight(CoordinatorEntity[SmallTVUltraCoordinator], LightEntity)
     async def async_turn_on(self, **kwargs) -> None:
         ha_brt: int = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
         # Map HA 0-255 → device 0-100
-        device_brt = round(ha_brt / 255 * 100)
+        device_brt = max(1, round(ha_brt / 255 * 100))
         await self.coordinator.api.set_brightness(device_brt)
         self._brightness = ha_brt
         self._is_on = True

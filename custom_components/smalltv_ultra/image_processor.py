@@ -33,7 +33,7 @@ def _load_font(font_path: str | None = None) -> ImageFont.FreeTypeFont | ImageFo
 def _process_frame(
     raw_bytes: bytes,
     label: str,
-    font_path: str | None = None,
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont | None = None,
 ) -> Image.Image:
     """Return a 240×240 RGB PIL Image ready for export (JPEG or GIF frame)."""
     img = Image.open(io.BytesIO(raw_bytes)).convert("RGB")
@@ -54,7 +54,8 @@ def _process_frame(
     bar_top = _DISPLAY_SIZE - _LABEL_BAR_HEIGHT
     draw.rectangle([(0, bar_top), (_DISPLAY_SIZE, _DISPLAY_SIZE)], fill=(0, 0, 0, 160))
 
-    font = _load_font(font_path)
+    if font is None:
+        font = _load_font()
     text = label[:22]
     bbox = draw.textbbox((0, 0), text, font=font)
     text_w = bbox[2] - bbox[0]
@@ -81,7 +82,7 @@ def process_camera_image(
     CPU-bound – call via ``hass.async_add_executor_job()``.
     """
     out = io.BytesIO()
-    _process_frame(raw_bytes, label, font_path).save(
+    _process_frame(raw_bytes, label, _load_font(font_path)).save(
         out, format="JPEG", quality=85, optimize=True
     )
     return out.getvalue()
@@ -101,9 +102,10 @@ def create_camera_gif(
 
     Returns GIF bytes.  CPU-bound – call via ``hass.async_add_executor_job()``.
     """
+    font = _load_font(font_path)  # load once for all frames
     pil_frames: list[Image.Image] = []
     for raw_bytes, label in frames:
-        pil_frames.append(_process_frame(raw_bytes, label, font_path))
+        pil_frames.append(_process_frame(raw_bytes, label, font))
 
     if not pil_frames:
         raise ValueError("No frames to encode")
